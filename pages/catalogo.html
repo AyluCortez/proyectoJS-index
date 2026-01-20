@@ -15,6 +15,9 @@
     <meta property="og:description" content="Encontra las mejores telas y rollos para indumentaria en Sheymond Textil. Calidad, variedad y precios competitivos para tus proyectos de moda.">
     <!-- icono de favicon -->
     <link rel="icon" type="icono" href="../img/icono.png">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
     <header>
@@ -49,6 +52,18 @@
         <main>
             <section class="titulo">
                 <h2> Nuestros productos</h2>
+            </section>
+            <section class="seccion-superior">
+                <div id="contenedor-analisis" class="bloque-info">
+                    <h3>Análisis de Stock</h3>
+                    <div id="analisis-contenido"></div>
+                </div>
+                <div id="contenedor-carrito" class="bloque-carrito">
+                    <h3>Mi Carrito 🛒</h3>
+                    <ul id="lista-carrito"></ul>
+                    <p class="total">Total: $<span id="total-carrito">0</span></p>
+                    <button id="btn-finalizar" class="btn-comprar">Finalizar Compra</button>
+                </div>
             </section>
             <section class="catalogo" id="catalogo-contenedor">
                 <div class="objeto"> <img src="../img/catalogo13.jpeg" alt="Imagen de producto textil tela de punto">

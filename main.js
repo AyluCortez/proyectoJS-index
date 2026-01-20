@@ -99,7 +99,7 @@ if (contenedorCatalogo) {
             <hr>
         `;
 
-        console.log(`[CONSOLA] Análisis de precios completado.`);
+        console.log(` Análisis de precios completado.`);
         console.table(productosEconomicos);
     }
     
