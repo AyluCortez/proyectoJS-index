@@ -192,7 +192,7 @@ if (formularioContacto) {
             return;
         }
 
-        // Creamos el objeto de la consulta
+
         const nuevaConsulta = {
             id: Date.now(), 
             nombre: nombreInput,
@@ -200,7 +200,6 @@ if (formularioContacto) {
             mensaje: mensajeInput
         };
 
-        // 7. Guardamos en el Array y luego en LocalStorage
         consultasRecibidas.push(nuevaConsulta);
         localStorage.setItem('textileriaConsultas', JSON.stringify(consultasRecibidas));
 
@@ -212,10 +211,7 @@ if (formularioContacto) {
             confirmButtonColor: '#28a745'
         });
 
-        // 9. Limpiamos el formulario para que quede listo para otra consulta
         formularioContacto.reset();
-        
-        // Opcional: ver en consola que se guardó
         console.log("Consulta guardada con éxito:", nuevaConsulta);
     });
 }
