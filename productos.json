@@ -3,28 +3,28 @@
         "id": 1,
         "nombre": "Punto",
         "precio": 7.5,
-        "imagen": "./img/catalogo13.jpeg",
+        "imagen": "../img/catalogo13.jpeg",
         "descripcion": "Especiales por su rinde, dejando un mayor margen de ganancia."
     },
     {
         "id": 2,
         "nombre": "Plano",
         "precio": 15.9,
-        "imagen": "./img/catalogo7.jpeg",
+        "imagen": "../img/catalogo7.jpeg",
         "descripcion": "Especifico para prendas únicas de alto nivel."
     },
     {
         "id": 3,
         "nombre": "Sastreria",
         "precio": 22.0,
-        "imagen": "./img/catalogo2.jpeg",
+        "imagen": "../img/catalogo2.jpeg",
         "descripcion": "Ideal para atuendos elegantes, con variedad de tipos."
     },
     {
         "id": 4,
         "nombre": "Vestidos",
         "precio": 8.0,
-        "imagen": "./img/catalogo11.jpeg",
+        "imagen": "../img/catalogo11.jpeg",
         "descripcion": "Exquisitos para este verano, liviano, economico y hermosos."
     }
 ]

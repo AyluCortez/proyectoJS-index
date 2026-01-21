@@ -1,6 +1,4 @@
-// === 1. DEFINICIÓN DE ESTRUCTURAS Y DATOS ===
-// --- FUNCIÓN CONSTRUCTORA---
-// === 1. DEFINICIÓN DE ESTRUCTURAS ===
+// estructura del proyecto
 function ConsultaCliente(id, nombre, email, mensaje) {
     this.id = id;
     this.nombre = nombre;
@@ -8,126 +6,164 @@ function ConsultaCliente(id, nombre, email, mensaje) {
     this.mensaje = mensaje;
 }
 
-// === 2. LÓGICA DE CATÁLOGO Y CARRITO ===
-const contenedorCatalogo = document.getElementById('catalogo-contenedor');
-let productos = []; // Aquí se guardará lo del JSON
+// Estas quedan afuera para que todas las funciones puedan verlas
+let productos = []; 
 let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
 
-if (contenedorCatalogo) {
-    // Crear contenedor de análisis arriba
-    const contenedorAnalisis = document.createElement('section');
-    contenedorAnalisis.id = 'analisis-stock-dinamico';
-    contenedorAnalisis.classList.add('seccion-analisis');
-    contenedorCatalogo.parentElement.insertBefore(contenedorAnalisis, contenedorCatalogo);
+// === catalogo y carrito ===
+const contenedorCatalogo = document.getElementById('catalogo-contenedor');
+const listaCarrito = document.getElementById('lista-carrito');
+const totalCarrito = document.getElementById('total-carrito');
 
-    // --- FUNCIÓN ASINCRÓNICA (Trae los datos) ---
-    async function obtenerProductos() {
-        try {
-            const response = await fetch('./productos.json'); 
-            productos = await response.json();
-            
-            // Una vez que tenemos los productos, disparamos todo lo demás
-            renderizarCatalogo(productos);
-            realizarAnalisisStock(productos, contenedorAnalisis);
-            actualizarVistaCarrito(); // Para que se vea lo que ya estaba en localStorage
-        } catch (error) {
-            console.error("Error cargando productos:", error);
-        }
-    }
+// funcion vista del carrito
+// La sacamos del IF para que sea accesible globalmente
+function actualizarVistaCarrito() {
+    if (!listaCarrito || !totalCarrito) return;
 
-    // --- RENDERIZAR TARJETAS ---
-    function renderizarCatalogo(lista) {
-        contenedorCatalogo.innerHTML = '';
-        lista.forEach(producto => {
-            let tarjeta = document.createElement('div');
-            tarjeta.classList.add('objeto'); 
-            tarjeta.innerHTML = `
-                <img src="${producto.imagen}" alt="${producto.nombre}">
-                <h3>${producto.nombre}</h3>
-                <p>${producto.descripcion}</p>
-                <p><b>$${producto.precio}</b></p>
-                <button class="btn-catalogo" id="btn-add-${producto.id}">Agregar al Carrito</button>
-            `;
-            contenedorCatalogo.appendChild(tarjeta);
+    listaCarrito.innerHTML = '';
+    carrito.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.style.listStyle = "none";
+        li.style.marginBottom = "5px";
+        li.innerHTML = `
+            ${item.nombre} - $${item.precio} 
+            <button onclick="eliminarDelCarrito(${index})" style="color:red; border:none; background:none; cursor:pointer; font-weight:bold;"> [x] </button>
+        `;
+        listaCarrito.appendChild(li);
+    });
 
-            // EVENTO PARA AGREGAR
-            document.getElementById(`btn-add-${producto.id}`).addEventListener('click', () => {
-                agregarAlCarrito(producto.id);
-            });
-        });
-    }
-
-    // --- AGREGAR AL CARRITO ---
-    function agregarAlCarrito(id) {
-        const producto = productos.find(p => p.id === id);
-        if (producto) {
-            carrito.push(producto);
-            localStorage.setItem('carrito', JSON.stringify(carrito));
-            
-            Toastify({
-                text: `¡${producto.nombre} agregado!`,
-                duration: 2000,
-                gravity: "top",
-                position: "right",
-                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
-            }).showToast();
-
-            actualizarVistaCarrito();
-        }
-    }
-
-    // --- ACTUALIZAR VISTA DEL CARRITO (La lista del costado) ---
-    function actualizarVistaCarrito() {
-        const listaCarrito = document.getElementById('lista-carrito');
-        const totalCarrito = document.getElementById('total-carrito');
-        if (!listaCarrito) return;
-
-        listaCarrito.innerHTML = '';
-        carrito.forEach((item, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                ${item.nombre} - $${item.precio} 
-                <button onclick="eliminarDelCarrito(${index})" style="color:red; border:none; background:none; cursor:pointer;"> [x] </button>
-            `;
-            listaCarrito.appendChild(li);
-        });
-
-        const total = carrito.reduce((acc, prod) => acc + prod.precio, 0);
-        totalCarrito.innerText = total.toFixed(2);
-    }
-
-    // Iniciar carga
-    obtenerProductos();
+    const total = carrito.reduce((acc, prod) => acc + prod.precio, 0);
+    totalCarrito.innerText = total.toFixed(2);
 }
 
-// --- FUNCIÓN PARA ELIMINAR (Debe ser global para el onclick) ---
+// funcion eliminar del carrito 
 window.eliminarDelCarrito = function(index) {
     carrito.splice(index, 1);
     localStorage.setItem('carrito', JSON.stringify(carrito));
-    // Necesitamos llamar a actualizarVistaCarrito, pero está dentro del IF. 
-    // Lo ideal es sacarla del IF o llamarla mediante una referencia.
-    location.reload(); // Forma rápida para este ejercicio, o mueve la función fuera del if.
+    actualizarVistaCarrito(); // Ahora actualiza sin recargar la página
 };
-// === 3 FORMULARIO DE CONTACTO ===
 
-// 1. Seleccionamos el formulario usando su ID
+// funcion agregar al carrito
+function agregarAlCarrito(id) {
+    const producto = productos.find(p => p.id === id);
+    if (producto) {
+        carrito.push(producto);
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        
+        Toastify({
+            text: `¡${producto.nombre} agregado!`,
+            duration: 2000,
+            gravity: "top",
+            position: "right",
+            style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+        }).showToast();
+
+        actualizarVistaCarrito();
+    }
+}
+
+// función de análisis de stock 
+function realizarAnalisisStock(lista) {
+    // Buscamos el div vacío dentro del cuadro de análisis
+    const divContenido = document.getElementById('analisis-contenido');
+    
+    if (!divContenido) return; // Si no lo encuentra, no hace nada
+
+    const precioLimite = 10;
+    
+    // Filtrado de productos económicos
+    const economicos = lista.filter(prod => prod.precio <= precioLimite);
+
+    // Cálculo del costo total de esa selección
+    const costoTotal = economicos.reduce((acc, prod) => acc + prod.precio, 0);
+
+    // texto descriptivo
+    divContenido.innerHTML = `
+        <p>Actualmente tenemos <b>${economicos.length}</b> tipos de telas en oferta (menos de $${precioLimite}).</p>
+        <p>Costo base de selección: <b>$${costoTotal.toFixed(2)}</b></p>
+        <p style="font-size: 0.8em; color: gray;">* Análisis actualizado en tiempo real.</p>
+    `;
+}
+async function obtenerProductos() {
+    try {
+        const response = await fetch('../productos.json'); 
+        productos = await response.json();
+        
+        renderizarCatalogo(productos);
+        actualizarVistaCarrito();
+        realizarAnalisisStock(productos); 
+        
+    } catch (error) {
+        console.error("Error cargando productos:", error);
+    }
+}
+
+function renderizarCatalogo(lista) {
+    if (!contenedorCatalogo) return;
+    contenedorCatalogo.innerHTML = '';
+    
+    lista.forEach(producto => {
+        let tarjeta = document.createElement('div');
+        tarjeta.classList.add('objeto'); 
+        tarjeta.innerHTML = `
+            <img src="${producto.imagen}" alt="${producto.nombre}">
+            <h3>${producto.nombre}</h3>
+            <p>${producto.descripcion}</p>
+            <p><b>$${producto.precio}</b></p>
+            <div class="botones-container" style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn-catalogo" id="btn-add-${producto.id}">Agregar</button>
+                <a class="btn-catalogo" href="https://wa.me/5491128310172" target="_blank" style="text-decoration:none; background:#25d366;">WhatsApp</a>
+            </div>
+        `;
+        contenedorCatalogo.appendChild(tarjeta);
+
+        document.getElementById(`btn-add-${producto.id}`).addEventListener('click', () => {
+            agregarAlCarrito(producto.id);
+        });
+    });
+}
+
+// fetch para obtener los productos
+async function obtenerProductos() {
+    try {
+        const response = await fetch('../productos.json'); 
+        productos = await response.json();
+        
+        const contenedorAnalisis = document.getElementById('analisis-stock-dinamico');
+        
+        renderizarCatalogo(productos);
+        realizarAnalisisStock(productos, contenedorAnalisis);
+        actualizarVistaCarrito();
+    } catch (error) {
+        console.error("Error cargando productos:", error);
+    }
+}
+
+// inicio de la app
+if (contenedorCatalogo) {
+    if (!document.getElementById('analisis-stock-dinamico')) {
+        const divAnalisis = document.createElement('div');
+        divAnalisis.id = 'analisis-stock-dinamico';
+        contenedorCatalogo.parentElement.insertBefore(divAnalisis, contenedorCatalogo);
+    }
+    obtenerProductos();
+}
+// formulario (parte de CONTACTO)
+
 const formularioContacto = document.getElementById('formulario-contacto');
 
 if (formularioContacto) {
-    // 2. Cargamos las consultas previas del LocalStorage o empezamos de cero
+    // se guarda las consultas en local storage
     let consultasRecibidas = JSON.parse(localStorage.getItem('textileriaConsultas')) || [];
 
-    // 3. Escuchamos el evento 'submit'
     formularioContacto.addEventListener('submit', (e) => {
-        // ¡ESTO ES LO MÁS IMPORTANTE! Detiene la recarga de la página
         e.preventDefault();
 
-        // 4. Capturamos los valores de los inputs
+
         const nombreInput = document.getElementById('name').value;
         const emailInput = document.getElementById('email').value;
         const mensajeInput = document.getElementById('message').value;
-
-        // 5. Validamos (aunque el HTML tiene 'required', esto asegura que no haya solo espacios)
+        //Valida que los campos no estén vacíos
         if (nombreInput.trim() === "" || emailInput.trim() === "" || mensajeInput.trim() === "") {
             Swal.fire({
                 title: 'Error',
@@ -138,9 +174,9 @@ if (formularioContacto) {
             return;
         }
 
-        // 6. Creamos el objeto de la consulta
+        // Creamos el objeto de la consulta
         const nuevaConsulta = {
-            id: Date.now(), // Usamos la fecha como ID único
+            id: Date.now(), 
             nombre: nombreInput,
             email: emailInput,
             mensaje: mensajeInput
@@ -150,7 +186,7 @@ if (formularioContacto) {
         consultasRecibidas.push(nuevaConsulta);
         localStorage.setItem('textileriaConsultas', JSON.stringify(consultasRecibidas));
 
-        // 8. MOSTRAMOS EL MENSAJE DE ÉXITO (SweetAlert2)
+        //mensaje de exito !
         Swal.fire({
             title: '¡Mensaje Enviado!',
             text: `Gracias ${nombreInput}, hemos recibido tu mensaje correctamente.`,
