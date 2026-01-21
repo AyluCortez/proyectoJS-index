@@ -5,6 +5,8 @@ function ConsultaCliente(id, nombre, email, mensaje) {
     this.email = email;
     this.mensaje = mensaje;
 }
+const btnFinalizar = document.getElementById('btn-finalizar');
+
 
 // Estas quedan afuera para que todas las funciones puedan verlas
 let productos = []; 
@@ -148,6 +150,22 @@ if (contenedorCatalogo) {
     }
     obtenerProductos();
 }
+
+btnFinalizar.addEventListener('click', () => {
+    Swal.fire({
+        title: '¿Confirmar compra?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, comprar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            carrito = []; // Vaciamos el array
+            localStorage.removeItem('carrito'); // Borramos el storage
+            actualizarVistaCarrito(); // Refrescamos la vista
+            Swal.fire('¡Éxito!', 'Gracias por tu compra', 'success');
+        }
+    });
+});
 // formulario (parte de CONTACTO)
 
 const formularioContacto = document.getElementById('formulario-contacto');

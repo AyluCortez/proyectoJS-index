@@ -318,6 +318,31 @@ $borde: 1px solid #ddd;
         }
     }
 }
+#btn-finalizar {
+    background-color: #28a745; // Color verde éxito
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease; // Para que el efecto sea suave
+    margin-top: 15px;
+    width: 100%; // Para que ocupe todo el ancho del cuadro del carrito
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        background-color: #218838; // Verde más oscuro al pasar el mouse
+        transform: translateY(-2px); // Efecto de que se levanta
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+        transform: translateY(0); // Vuelve a su lugar al hacer click
+    }
+}
 
 
 

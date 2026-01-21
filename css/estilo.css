@@ -344,6 +344,30 @@ nav .navbar-toggler {
   border-radius: 10px;
 }
 
+#btn-finalizar {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  width: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+#btn-finalizar:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+#btn-finalizar:active {
+  transform: translateY(0);
+}
+
 .titulo-reco {
   background-color: rgba(110, 107, 107, 0.1490196078);
   width: 100%;
