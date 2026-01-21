@@ -1,14 +1,6 @@
 // === 1. DEFINICIÓN DE ESTRUCTURAS Y DATOS ===
 // --- FUNCIÓN CONSTRUCTORA---
-function ProductoTextil(id, nombre, precio, imagen, descripcion) {
-    this.id = id;
-    this.nombre = nombre;
-    this.precio = precio;
-    this.imagen = imagen; 
-    this.descripcion = descripcion;
-}
-
-// --- FUNCIÓN CONSTRUCTORA: Consultas ---
+// === 1. DEFINICIÓN DE ESTRUCTURAS ===
 function ConsultaCliente(id, nombre, email, mensaje) {
     this.id = id;
     this.nombre = nombre;
@@ -16,163 +8,160 @@ function ConsultaCliente(id, nombre, email, mensaje) {
     this.mensaje = mensaje;
 }
 
-// --- ARRAY DE DATOS (Stock) ---
-const catalogoStock = [
-    new ProductoTextil(1, "Punto", 7.5, "../img/catalogo13.jpeg", "Especiales por su rinde, dejando un mayor margen de ganancia."),
-    new ProductoTextil(2, "Plano", 15.9, "../img/catalogo7.jpeg", "Especifico para prendas únicas de alto nivel."),
-    new ProductoTextil(3, "Sastreria", 22.0, "../img/catalogo2.jpeg", "Ideal para atuendos elegantes, con variedad de tipos."),
-    new ProductoTextil(4, "Vestidos", 8.0, "../img/catalogo11.jpeg", "Exquisitos para este verano, liviano, economico y hermosos."),
-    new ProductoTextil(5, "Tejidos", 30.5, "../img/tejidos20.jpeg", "Destaca tu marca por tejidos que los nacionales no pueden."),
-    new ProductoTextil(6, "Gabardina", 12.5, "../img/gabardina.jpeg", "Clasicos de todos, pero ahora con renovación."),
-    new ProductoTextil(7, "Estampados", 9.9, "../img/catalogo9.jpeg", "En la estación que estemos, lo van a seguir buscando.")
-];
-
-
-
-// === 2. LÓGICA PARA LA PÁGINA DE CATÁLOGO ===
-
-
+// === 2. LÓGICA DE CATÁLOGO Y CARRITO ===
 const contenedorCatalogo = document.getElementById('catalogo-contenedor');
+let productos = []; // Aquí se guardará lo del JSON
+let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
 
 if (contenedorCatalogo) {
-    
-    // 1. CONTENEDOR DE ANÁLISIS 
+    // Crear contenedor de análisis arriba
     const contenedorAnalisis = document.createElement('section');
-    contenedorAnalisis.id = 'analisis-stock-dinamico'; // Le damos un ID interno
-    contenedorAnalisis.classList.add('seccion-analisis'); 
-    
-    const contenedorPadre = contenedorCatalogo.parentElement;
-    
+    contenedorAnalisis.id = 'analisis-stock-dinamico';
+    contenedorAnalisis.classList.add('seccion-analisis');
+    contenedorCatalogo.parentElement.insertBefore(contenedorAnalisis, contenedorCatalogo);
 
-    contenedorPadre.insertBefore(contenedorAnalisis, contenedorCatalogo); 
+    // --- FUNCIÓN ASINCRÓNICA (Trae los datos) ---
+    async function obtenerProductos() {
+        try {
+            const response = await fetch('./productos.json'); 
+            productos = await response.json();
+            
+            // Una vez que tenemos los productos, disparamos todo lo demás
+            renderizarCatalogo(productos);
+            realizarAnalisisStock(productos, contenedorAnalisis);
+            actualizarVistaCarrito(); // Para que se vea lo que ya estaba en localStorage
+        } catch (error) {
+            console.error("Error cargando productos:", error);
+        }
+    }
 
-
-
-    function renderizarCatalogo() {
-        contenedorCatalogo.innerHTML = ''; // Limpiamos el contenido estático
-        
-        catalogoStock.forEach(producto => {
-            // **DOM: Crear elemento principal (Tarjeta de producto)**
+    // --- RENDERIZAR TARJETAS ---
+    function renderizarCatalogo(lista) {
+        contenedorCatalogo.innerHTML = '';
+        lista.forEach(producto => {
             let tarjeta = document.createElement('div');
             tarjeta.classList.add('objeto'); 
-            
             tarjeta.innerHTML = `
-                <img src="${producto.imagen}" alt="Imagen de producto textil ${producto.nombre}">
-                <a href=""><h3>${producto.nombre}</h3></a>
+                <img src="${producto.imagen}" alt="${producto.nombre}">
+                <h3>${producto.nombre}</h3>
                 <p>${producto.descripcion}</p>
-                <a class="btn-catalogo" id="info-${producto.id}"> <b>Más info</b></a>
+                <p><b>$${producto.precio}</b></p>
+                <button class="btn-catalogo" id="btn-add-${producto.id}">Agregar al Carrito</button>
             `;
-            
-            contenedorCatalogo.appendChild(tarjeta); 
+            contenedorCatalogo.appendChild(tarjeta);
 
-            document.getElementById(`info-${producto.id}`).addEventListener('click', () => {
-                sessionStorage.setItem('productoSeleccionadoID', producto.id);
-                console.log(` ID Producto ${producto.id} guardado temporalmente.`);
-                alert(`Seleccionaste ${producto.nombre}. guardado temporalmente en sesión.`);
+            // EVENTO PARA AGREGAR
+            document.getElementById(`btn-add-${producto.id}`).addEventListener('click', () => {
+                agregarAlCarrito(producto.id);
             });
         });
-        
-
-        realizarAnalisisStock(contenedorAnalisis); 
-        generarReporteStock(); 
     }
 
+    // --- AGREGAR AL CARRITO ---
+    function agregarAlCarrito(id) {
+        const producto = productos.find(p => p.id === id);
+        if (producto) {
+            carrito.push(producto);
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            
+            Toastify({
+                text: `¡${producto.nombre} agregado!`,
+                duration: 2000,
+                gravity: "top",
+                position: "right",
+                style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+            }).showToast();
 
-    function realizarAnalisisStock(contenedorParaInyectar) { 
-        const precioLimite = 10;
-        
-
-        const productosEconomicos = catalogoStock.filter(producto => 
-            producto.precio <= precioLimite
-        );
-
-
-        const costoTotal = productosEconomicos.reduce((acumulador, producto) => 
-            acumulador + producto.precio, 0
-        );
-        
-
-        contenedorParaInyectar.innerHTML = `
-            <h2>Análisis Rápido de Stock</h2>
-            <p>Se encontraron <b>${productosEconomicos.length}</b> tipos de telas a un precio menor o igual a $${precioLimite}.</p>
-            <p>El costo total de esta selección es: <b>$${costoTotal}</b></p>
-            <hr>
-        `;
-
-        console.log(` Análisis de precios completado.`);
-        console.table(productosEconomicos);
-    }
-    
-
-
-    function generarReporteStock() {
-        console.log(" --- REPORTE RÁPIDO DE STOCK COMPLETO ---");
-        let contador = 0;
-
-        for (const producto of catalogoStock) {
-            console.log(`Tela [${producto.id}]: ${producto.nombre} - Precio: $${producto.precio}`);
-            contador++;
+            actualizarVistaCarrito();
         }
-        console.log(`Total de productos listados en el reporte: ${contador}.`);
     }
 
-    renderizarCatalogo();
+    // --- ACTUALIZAR VISTA DEL CARRITO (La lista del costado) ---
+    function actualizarVistaCarrito() {
+        const listaCarrito = document.getElementById('lista-carrito');
+        const totalCarrito = document.getElementById('total-carrito');
+        if (!listaCarrito) return;
+
+        listaCarrito.innerHTML = '';
+        carrito.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                ${item.nombre} - $${item.precio} 
+                <button onclick="eliminarDelCarrito(${index})" style="color:red; border:none; background:none; cursor:pointer;"> [x] </button>
+            `;
+            listaCarrito.appendChild(li);
+        });
+
+        const total = carrito.reduce((acc, prod) => acc + prod.precio, 0);
+        totalCarrito.innerText = total.toFixed(2);
+    }
+
+    // Iniciar carga
+    obtenerProductos();
 }
+
+// --- FUNCIÓN PARA ELIMINAR (Debe ser global para el onclick) ---
+window.eliminarDelCarrito = function(index) {
+    carrito.splice(index, 1);
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+    // Necesitamos llamar a actualizarVistaCarrito, pero está dentro del IF. 
+    // Lo ideal es sacarla del IF o llamarla mediante una referencia.
+    location.reload(); // Forma rápida para este ejercicio, o mueve la función fuera del if.
+};
 // === 3 FORMULARIO DE CONTACTO ===
 
-const formularioContacto = document.getElementById('formulario-contacto'); 
+// 1. Seleccionamos el formulario usando su ID
+const formularioContacto = document.getElementById('formulario-contacto');
 
 if (formularioContacto) {
-    
-    let consultasRecibidas;
-    const datosGuardados = localStorage.getItem('textileriaConsultas');
+    // 2. Cargamos las consultas previas del LocalStorage o empezamos de cero
+    let consultasRecibidas = JSON.parse(localStorage.getItem('textileriaConsultas')) || [];
 
-    if (datosGuardados) {
-        consultasRecibidas = JSON.parse(datosGuardados);
-    } else {
-        consultasRecibidas = [];
-    }
-    console.log("Consultas cargadas:", consultasRecibidas);
+    // 3. Escuchamos el evento 'submit'
+    formularioContacto.addEventListener('submit', (e) => {
+        // ¡ESTO ES LO MÁS IMPORTANTE! Detiene la recarga de la página
+        e.preventDefault();
 
-    const inputNombre = document.getElementById('name'); 
-    const inputEmail = document.getElementById('email');
-    const inputMensaje = document.getElementById('message');
+        // 4. Capturamos los valores de los inputs
+        const nombreInput = document.getElementById('name').value;
+        const emailInput = document.getElementById('email').value;
+        const mensajeInput = document.getElementById('message').value;
 
-    inputNombre.addEventListener('change', (event) => {
-        console.log(`El valor final del nombre es: ${event.target.value}`);
-    });
-    
-    function manejarEnvioFormulario(e) {
-        const nombreInput = inputNombre.value;
-        const emailInput = inputEmail.value;
-        const mensajeInput = inputMensaje.value;
-
-        // Validamos que los campos no estén vacíos
-        if (nombreInput === "") {
-            alert('Por favor, complete el campo Nombre.');
+        // 5. Validamos (aunque el HTML tiene 'required', esto asegura que no haya solo espacios)
+        if (nombreInput.trim() === "" || emailInput.trim() === "" || mensajeInput.trim() === "") {
+            Swal.fire({
+                title: 'Error',
+                text: 'Por favor, completa todos los campos correctamente.',
+                icon: 'error',
+                confirmButtonColor: '#d33'
+            });
             return;
         }
-        if (emailInput === "") {
-            alert('Por favor, complete el campo Email.');
-            return;
-        }
-        if (mensajeInput === "") {
-            alert('Por favor, complete el campo Mensaje.');
-            return;
-        }
-        
-        const nuevoId = consultasRecibidas.length + 1;
-        const nuevaConsulta = new ConsultaCliente(nuevoId, nombreInput, emailInput, mensajeInput);
 
+        // 6. Creamos el objeto de la consulta
+        const nuevaConsulta = {
+            id: Date.now(), // Usamos la fecha como ID único
+            nombre: nombreInput,
+            email: emailInput,
+            mensaje: mensajeInput
+        };
+
+        // 7. Guardamos en el Array y luego en LocalStorage
         consultasRecibidas.push(nuevaConsulta);
-
         localStorage.setItem('textileriaConsultas', JSON.stringify(consultasRecibidas));
+
+        // 8. MOSTRAMOS EL MENSAJE DE ÉXITO (SweetAlert2)
+        Swal.fire({
+            title: '¡Mensaje Enviado!',
+            text: `Gracias ${nombreInput}, hemos recibido tu mensaje correctamente.`,
+            icon: 'success',
+            confirmButtonColor: '#28a745'
+        });
+
+        // 9. Limpiamos el formulario para que quede listo para otra consulta
+        formularioContacto.reset();
         
-        console.log(`[CONSOLA] Dato guardado en localStorage ANTES de recarga.`);
-        console.table(consultasRecibidas);
-
-    }
-
-    // Escuchamos el evento 'submit' en el formulario porque si lo cambio el submit a botton no funcionara el formulario que se agarro de boostrap
-    formularioContacto.addEventListener('submit', manejarEnvioFormulario);
+        // Opcional: ver en consola que se guardó
+        console.log("Consulta guardada con éxito:", nuevaConsulta);
+    });
 }
